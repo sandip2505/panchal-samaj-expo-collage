@@ -19,6 +19,7 @@ export default function HomeScreen() {
 
   const [sliders, setSliders] = useState([]);
   const [news, setNews] = useState([]);
+  const [events, setEvents] = useState([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,14 +35,16 @@ export default function HomeScreen() {
         setUserData(uData);
       }
       
-      const [slidersData, newsData, statsData] = await Promise.all([
+      const [slidersData, newsData, statsData, eventsData] = await Promise.all([
         dataService.getSliders(),
         dataService.getNews(),
         dataService.getStats(),
+        dataService.getEvents(),
       ]);
       setSliders(slidersData);
       setNews(newsData);
       setStats(statsData);
+      setEvents(eventsData);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -76,7 +79,6 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <ScrollView 
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
@@ -92,7 +94,7 @@ export default function HomeScreen() {
             </View>
             <TouchableOpacity 
               style={styles.profileBtn}
-              onPress={() => router.push(isLoggedIn ? '/profile' : '/login')}
+              onPress={() => router.push(isLoggedIn ? '/(tabs)/profile' : '/login')}
             >
               {isLoggedIn && userData?.photo ? (
                 <Image source={{ uri: Config.getImageUri(userData.photo) || '' }} style={styles.avatar} />
@@ -136,13 +138,77 @@ export default function HomeScreen() {
                   style={styles.actionItem}
                   onPress={() => router.push(action.route as any)}
                 >
-                  <View style={[styles.actionIcon, { backgroundColor: action.color + '15' }]}>
-                    <IconSymbol name={action.icon as any} size={24} color={action.color} />
+                  <View style={[styles.actionIconContainer, { backgroundColor: action.color }]}>
+                    <IconSymbol name={action.icon as any} size={26} color="#fff" />
                   </View>
                   <Text style={styles.actionLabel}>{action.title}</Text>
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+
+          <View style={styles.moreSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>More Services</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.moreScroll}>
+              <TouchableOpacity style={styles.moreItem} onPress={() => router.push('/villages' as any)}>
+                <View style={[styles.moreIcon, { backgroundColor: '#4CAF5015' }]}>
+                  <IconSymbol name="mappin.and.ellipse" size={24} color="#4CAF50" />
+                </View>
+                <Text style={styles.moreLabel}>Villages</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.moreItem} onPress={() => router.push('/donations' as any)}>
+                <View style={[styles.moreIcon, { backgroundColor: '#E91E6315' }]}>
+                  <IconSymbol name="heart.fill" size={24} color="#E91E63" />
+                </View>
+                <Text style={styles.moreLabel}>Donations</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.moreItem} onPress={() => router.push('/polls' as any)}>
+                <View style={[styles.moreIcon, { backgroundColor: '#2196F315' }]}>
+                  <IconSymbol name="chart.bar.fill" size={24} color="#2196F3" />
+                </View>
+                <Text style={styles.moreLabel}>Polls</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.moreItem} onPress={() => router.push('/support' as any)}>
+                <View style={[styles.moreIcon, { backgroundColor: '#FF980015' }]}>
+                  <IconSymbol name="questionmark.circle.fill" size={24} color="#FF9800" />
+                </View>
+                <Text style={styles.moreLabel}>Support</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
+          <View style={styles.newsSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Upcoming Events</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/events' as any)}>
+                <Text style={styles.seeAll}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.eventsScroll}>
+              {events.map((event: any) => (
+                <TouchableOpacity 
+                  key={event._id} 
+                  style={styles.eventCard}
+                  onPress={() => router.push(`/event/${event._id}`)}
+                >
+                  <View style={styles.eventImageContainer}>
+                    {event.bannerImage ? (
+                      <Image source={{ uri: Config.getImageUri(event.bannerImage) }} style={styles.eventImage} />
+                    ) : (
+                      <View style={styles.eventPlaceholder}>
+                        <IconSymbol name="calendar" size={30} color={COLORS.primary} />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.eventInfo}>
+                    <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
+                    <Text style={styles.eventDate}>{new Date(event.date).toLocaleDateString()}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
 
           <View style={styles.newsSection}>
@@ -185,13 +251,26 @@ const styles = StyleSheet.create({
   overviewDivider: { width: 1, height: 30, backgroundColor: 'rgba(255,255,255,0.3)' },
   content: { marginTop: -30, paddingHorizontal: 20 },
   sliderContainer: { elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 10 },
-  quickActionsContainer: { marginTop: 30, marginBottom: 20 },
+  quickActionsContainer: { marginTop: 30, marginBottom: 25 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.black, marginBottom: 15 },
   actionGrid: { flexDirection: 'row', justifyContent: 'space-between' },
   actionItem: { alignItems: 'center', width: (width - 40) / 4 },
-  actionIcon: { width: 60, height: 60, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: 8, elevation: 2 },
-  actionLabel: { fontSize: 12, fontWeight: 'bold', color: COLORS.darkGray },
+  actionIconContainer: { width: 64, height: 64, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 8, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
+  actionLabel: { fontSize: 13, fontWeight: '600', color: COLORS.black },
+  moreSection: { marginBottom: 25 },
+  moreScroll: { paddingRight: 20 },
+  moreItem: { alignItems: 'center', marginRight: 20, backgroundColor: '#fff', padding: 15, borderRadius: 20, width: 100, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
+  moreIcon: { width: 45, height: 45, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+  moreLabel: { fontSize: 12, fontWeight: 'bold', color: COLORS.darkGray },
   newsSection: { marginTop: 10 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   seeAll: { color: COLORS.primary, fontWeight: 'bold', fontSize: 14 },
+  eventsScroll: { paddingRight: 20 },
+  eventCard: { width: 220, backgroundColor: '#fff', borderRadius: 20, marginRight: 15, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, overflow: 'hidden' },
+  eventImageContainer: { height: 120, width: '100%', backgroundColor: '#f9f9f9' },
+  eventImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  eventPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+  eventInfo: { padding: 12 },
+  eventTitle: { fontSize: 15, fontWeight: 'bold', color: COLORS.black },
+  eventDate: { fontSize: 12, color: COLORS.gray, marginTop: 4 },
 });

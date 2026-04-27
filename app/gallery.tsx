@@ -48,10 +48,9 @@ export default function GalleryScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: COLORS.primary }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <IconSymbol name="chevron.left" size={24} color={COLORS.primary} />
+          <IconSymbol name="chevron.left" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Gallery</Text>
       </View>
@@ -82,9 +81,9 @@ export default function GalleryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { padding: 25, paddingTop: 60, flexDirection: 'row', alignItems: 'center' },
-  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', elevation: 2 },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', marginLeft: 15 },
+  header: { padding: 25, paddingTop: 60, flexDirection: 'row', alignItems: 'center', borderBottomLeftRadius: 35, borderBottomRightRadius: 35 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', marginLeft: 15, color: '#fff' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { paddingHorizontal: 20, paddingBottom: 40 },
   imageCard: { width: (width - 60) / 2, height: 180, margin: 5, borderRadius: 20, overflow: 'hidden', elevation: 3 },

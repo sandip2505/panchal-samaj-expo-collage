@@ -16,6 +16,8 @@ export default function RegisterBusinessScreen() {
   const [plans, setPlans] = useState([]);
   const [fetchingPlans, setFetchingPlans] = useState(true);
 
+  const selectedPlanName = plans.find((p: any) => p._id === formData.subscriptionPlanId)?.name || 'Basic';
+
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -93,10 +95,9 @@ export default function RegisterBusinessScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: COLORS.primary }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <IconSymbol name="chevron.left" size={24} color={COLORS.primary} />
+          <IconSymbol name="chevron.left" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Register Business</Text>
       </View>
@@ -136,16 +137,30 @@ export default function RegisterBusinessScreen() {
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>WhatsApp (Optional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="WhatsApp number"
-              keyboardType="phone-pad"
-              value={formData.whatsapp}
-              onChangeText={(text) => setFormData({ ...formData, whatsapp: text })}
-            />
-          </View>
+          {(selectedPlanName === 'Standard' || selectedPlanName === 'Premium') && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>WhatsApp (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="WhatsApp number"
+                keyboardType="phone-pad"
+                value={formData.whatsapp}
+                onChangeText={(text) => setFormData({ ...formData, whatsapp: text })}
+              />
+            </View>
+          )}
+
+          {selectedPlanName === 'Premium' && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Website (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="https://example.com"
+                value={formData.website}
+                onChangeText={(text) => setFormData({ ...formData, website: text })}
+              />
+            </View>
+          )}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Business Address</Text>
@@ -208,9 +223,9 @@ export default function RegisterBusinessScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { padding: 25, paddingTop: 60, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff' },
-  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f9f9f9', justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', marginLeft: 15 },
+  header: { padding: 25, paddingTop: 60, flexDirection: 'row', alignItems: 'center', borderBottomLeftRadius: 35, borderBottomRightRadius: 35 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', marginLeft: 15, color: '#fff' },
   scrollContent: { paddingBottom: 40 },
   form: { padding: 25 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 20, marginTop: 10, color: COLORS.primary },

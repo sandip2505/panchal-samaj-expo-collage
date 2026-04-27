@@ -7,8 +7,10 @@ import authService from '@/services/auth.service';
 import { Colors, COLORS } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useRouter } from 'expo-router';
 
 export default function JobsScreen() {
+  const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
@@ -39,30 +41,11 @@ export default function JobsScreen() {
 
   const [applyingId, setApplyingId] = useState<string | null>(null);
 
-  const handleApply = async (jobId: string) => {
-    const userData = await authService.getUserData();
-    if (!userData) {
-      Alert.alert('Login Required', 'Please login to apply for jobs');
-      router.push('/login');
-      return;
-    }
-
-    setApplyingId(jobId);
-    try {
-      const result = await dataService.applyForJob({
-        jobId,
-        memberId: userData.id || userData._id,
-        applicationDate: new Date(),
-        status: 'Pending'
-      });
-      if (result) {
-        Alert.alert('Success', 'Application submitted successfully!');
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Application failed');
-    } finally {
-      setApplyingId(null);
-    }
+  const handleApply = async (jobId: string, jobTitle: string) => {
+    router.push({
+      pathname: '/job-apply',
+      params: { jobId, jobTitle }
+    });
   };
 
   const renderJob = ({ item }: { item: any }) => (
@@ -106,8 +89,7 @@ export default function JobsScreen() {
         </Text>
         <TouchableOpacity 
           style={[styles.applyBtn, { backgroundColor: COLORS.primary }]}
-          onPress={() => handleApply(item._id)}
-          disabled={applyingId === item._id}
+          onPress={() => handleApply(item._id, item.title)}
         >
           {applyingId === item._id ? (
             <ActivityIndicator color="#fff" size="small" />
@@ -121,7 +103,6 @@ export default function JobsScreen() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       
       <View style={styles.header}>
         <View>

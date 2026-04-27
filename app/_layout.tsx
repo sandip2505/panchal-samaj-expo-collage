@@ -1,8 +1,9 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'react-native';
 import 'react-native-reanimated';
+import { COLORS } from '@/constants/theme';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import authService from '@/services/auth.service';
@@ -37,10 +38,13 @@ export default function RootLayout() {
         <Stack.Screen name="polls" options={{ headerShown: false }} />
         <Stack.Screen name="about" options={{ headerShown: false }} />
         <Stack.Screen name="donations" options={{ headerShown: false }} />
-        <Stack.Screen name="complaints" options={{ headerShown: false }} />
+        <Stack.Screen name="villages" options={{ headerShown: false }} />
+        <Stack.Screen name="support" options={{ headerShown: false }} />
+        <Stack.Screen name="event-register" options={{ headerShown: false }} />
+        <Stack.Screen name="job-apply" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} translucent={false} />
     </ThemeProvider>
   );
 }

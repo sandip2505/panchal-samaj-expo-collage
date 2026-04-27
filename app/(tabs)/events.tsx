@@ -87,7 +87,13 @@ export default function EventsScreen() {
             </View>
             <Text style={styles.attendeeText}>{item.attendeeCount || 0} Attending</Text>
           </View>
-          <TouchableOpacity style={[styles.registerBtn, { backgroundColor: COLORS.primary }]}>
+          <TouchableOpacity 
+            style={[styles.registerBtn, { backgroundColor: COLORS.primary }]}
+            onPress={() => router.push({
+              pathname: '/event-register',
+              params: { eventId: item._id, eventTitle: item.title }
+            })}
+          >
             <Text style={styles.registerText}>Register</Text>
           </TouchableOpacity>
         </View>
@@ -97,7 +103,6 @@ export default function EventsScreen() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       
       <View style={styles.header}>
         <ThemedText type="title" style={styles.title}>Community Events</ThemedText>

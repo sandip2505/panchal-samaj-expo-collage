@@ -100,6 +100,12 @@ export const dataService = {
     return response.data;
   },
 
+  // Villages
+  getVillages: async () => {
+    const response = await api.get('/villages');
+    return response.data;
+  },
+
   // Donations
   getDonations: async () => {
     const response = await api.get('/donations');

@@ -30,6 +30,7 @@ const MAPPING = {
   'phone.fill': 'phone',
   'camera.fill': 'photo-camera',
   'rectangle.portrait.and.arrow.right': 'logout',
+  'message.fill': 'chat',
   
   // Community Modules
   'calendar': 'event',

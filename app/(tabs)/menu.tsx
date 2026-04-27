@@ -20,24 +20,21 @@ export default function MenuScreen() {
   }, []);
 
   const menuItems = [
-    { id: 'profile', title: 'My Profile', icon: 'person.fill', color: COLORS.primary, route: '/profile' },
+    { id: 'profile', title: 'My Profile', icon: 'person.fill', color: COLORS.primary, route: '/(tabs)/profile' },
+    { id: 'villages', title: 'Villages', icon: 'mappin.and.ellipse', color: '#4CAF50', route: '/villages' },
     { id: 'committee', title: 'Committee', icon: 'person.3.fill', color: COLORS.secondary, route: '/committee' },
     { id: 'business', title: 'Business Hub', icon: 'building.2.fill', color: COLORS.accent, route: '/business' },
     { id: 'gallery', title: 'Gallery', icon: 'photo.on.rectangle.angled', color: '#673AB7', route: '/gallery' },
     { id: 'donations', title: 'Donations', icon: 'heart.fill', color: '#E91E63', route: '/donations' },
-    { id: 'complaints', title: 'Help Desk', icon: 'exclamationmark.bubble.fill', color: '#F44336', route: '/complaints' },
+    { id: 'complaints', title: 'Help Desk', icon: 'exclamationmark.bubble.fill', color: '#F44336', route: '/support' },
     { id: 'polls', title: 'Live Polls', icon: 'chart.bar.fill', color: '#2196F3', route: '/polls' },
     { id: 'faq', title: 'FAQ', icon: 'questionmark.circle.fill', color: '#FF9800', route: '/faq' },
     { id: 'about', title: 'About Us', icon: 'info.circle.fill', color: '#607D8B', route: '/about' },
   ];
 
   const handlePress = (route: string) => {
-    if (route === '/profile') {
-      if (!isLoggedIn) {
-        router.push('/login');
-        return;
-      }
-      Alert.alert('Profile', 'Please use the profile button in the header or edit profile in member details.');
+    if (route.includes('profile') && !isLoggedIn) {
+      router.push('/login');
       return;
     }
     router.push(route as any);
