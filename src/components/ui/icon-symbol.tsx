@@ -55,16 +55,6 @@ const MAPPING = {
   'newspaper.fill': 'newspaper',
   'bookmark': 'bookmark',
   'number': 'numbers',
-  'checkmark': 'check',
-  'chevron.down': 'expand-more',
-  'photo.fill': 'photo',
-  'panorama.fill': 'panorama',
-  'xmark.circle.fill': 'cancel',
-  'creditcard.fill': 'credit-card',
-  'banknote.fill': 'payments',
-  'indianrupeesign.circle.fill': 'currency-rupee',
-  'village.fill': 'location-city',
-  'mappin': 'place',
 } as Record<string, ComponentProps<typeof MaterialIcons>['name']>;
 
 export type IconSymbolName = keyof typeof MAPPING;
