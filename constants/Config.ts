@@ -13,7 +13,7 @@ export const Config = {
 
   // Helper to get image URI
   getImageUri: (imagePath: string) => {
-    if (!imagePath) return null;
+    if (!imagePath) return undefined;
     if (imagePath.startsWith('http')) return imagePath;
 
     // Handle paths that already include /media or media/

@@ -276,7 +276,7 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     key={job._id}
                     style={styles.jobCard}
-                    onPress={() => router.push(`/jobs/${job._id}`)}
+                    onPress={() => router.push(`/job/${job._id}` as any)}
                   >
                     <View style={styles.jobBadge}>
                       <Text style={styles.jobTypeText}>{job.jobType}</Text>
@@ -288,7 +288,7 @@ export default function HomeScreen() {
                         <IconSymbol name="mappin" size={12} color={COLORS.gray} />
                         <Text style={styles.jobLocation}>{job.location}</Text>
                       </View>
-                      <TouchableOpacity style={styles.applyBtn} onPress={() => router.push(`/jobs/${job._id}`)}>
+                      <TouchableOpacity style={styles.applyBtn} onPress={() => router.push(`/job/${job._id}` as any)}>
                         <Text style={styles.applyBtnText}>Apply</Text>
                       </TouchableOpacity>
                     </View>
