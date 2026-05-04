@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, FlatList, TextInput, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, View, FlatList, TextInput, ActivityIndicator, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import dataService from '@/services/data.service';
-import { Colors } from '@/constants/theme';
+import { Colors, COLORS } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import MemberCard from '@/components/MemberCard';
@@ -15,15 +15,35 @@ export default function DirectoryScreen() {
   const colors = Colors[colorScheme];
 
   const [members, setMembers] = useState([]);
+  const [villages, setVillages] = useState<any[]>([]);
+  const [selectedVillageId, setSelectedVillageId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Fetch villages for filter
+  useEffect(() => {
+    const fetchVillages = async () => {
+      try {
+        const response = await dataService.getVillages();
+        setVillages(response || []);
+      } catch (error) {
+        console.error('Error fetching villages:', error);
+      }
+    };
+    fetchVillages();
+  }, []);
+
   const fetchMembers = async (pageNumber = 1, isRefreshing = false) => {
     try {
-      const response = await dataService.getMembers({ search, page: pageNumber, limit: 20 });
+      const params: any = { search, page: pageNumber, limit: 20 };
+      if (selectedVillageId) {
+        params.locations_id = selectedVillageId;
+      }
+      
+      const response = await dataService.getMembers(params);
       if (response && response.members) {
         if (isRefreshing) {
           setMembers(response.members);
@@ -45,7 +65,7 @@ export default function DirectoryScreen() {
     setMembers([]);
     setPage(1);
     fetchMembers(1, true);
-  }, [search]);
+  }, [search, selectedVillageId]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -59,6 +79,24 @@ export default function DirectoryScreen() {
       setPage(nextPage);
       fetchMembers(nextPage);
     }
+  };
+
+  const renderVillageChip = ({ item }: { item: any }) => {
+    const isSelected = selectedVillageId === item._id;
+    return (
+      <TouchableOpacity
+        style={[
+          styles.chip,
+          { backgroundColor: isSelected ? COLORS.primary : (colorScheme === 'dark' ? '#333' : '#fff') },
+          !isSelected && { borderColor: '#ddd', borderWidth: 1 }
+        ]}
+        onPress={() => setSelectedVillageId(isSelected ? null : item._id)}
+      >
+        <Text style={[styles.chipText, { color: isSelected ? '#fff' : colors.text }]}>
+          {item.name}
+        </Text>
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -75,11 +113,34 @@ export default function DirectoryScreen() {
             onChangeText={setSearch}
           />
         </View>
+
+        {/* Village Filter Chips */}
+        <View style={styles.filterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScroll}>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                { backgroundColor: selectedVillageId === null ? COLORS.primary : (colorScheme === 'dark' ? '#333' : '#fff') },
+                selectedVillageId !== null && { borderColor: '#ddd', borderWidth: 1 }
+              ]}
+              onPress={() => setSelectedVillageId(null)}
+            >
+              <Text style={[styles.chipText, { color: selectedVillageId === null ? '#fff' : colors.text }]}>
+                All Villages
+              </Text>
+            </TouchableOpacity>
+            {villages.map((v) => (
+              <View key={v._id}>
+                {renderVillageChip({ item: v })}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
       {loading && page === 1 ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.tint} />
+          <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
       ) : (
         <FlatList
@@ -104,7 +165,7 @@ export default function DirectoryScreen() {
           }
           ListFooterComponent={
             page < totalPages ? (
-              <ActivityIndicator size="small" color={colors.tint} style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="small" color={COLORS.primary} style={{ marginVertical: 20 }} />
             ) : null
           }
         />
@@ -120,7 +181,7 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     paddingTop: 60,
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
   searchBar: {
     flexDirection: 'row',
@@ -136,6 +197,27 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 16,
+  },
+  filterContainer: {
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  chipScroll: {
+    paddingRight: 20,
+    gap: 8,
+    flexDirection: 'row'
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 70,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   centerContainer: {
     flex: 1,
@@ -156,3 +238,4 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+

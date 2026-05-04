@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, Dimensions, Image, Text } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Config from '../constants/Config';
@@ -10,11 +10,31 @@ interface SliderProps {
 }
 
 export default function Slider({ data }: SliderProps) {
+  const pagerRef = useRef<PagerView>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  useEffect(() => {
+    if (!data || data.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const nextPage = (currentPage + 1) % data.length;
+      setCurrentPage(nextPage);
+      pagerRef.current?.setPage(nextPage);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [currentPage, data]);
+
   if (!data || data.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      <PagerView style={styles.pagerView} initialPage={0}>
+      <PagerView
+        ref={pagerRef}
+        style={styles.pagerView}
+        initialPage={0}
+        onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
+      >
         {data.map((item, index) => (
           <View key={index} style={styles.page}>
             <Image
@@ -71,3 +91,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+

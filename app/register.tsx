@@ -6,11 +6,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { dataService } from '../services/data.service';
 import api from '../services/api.service';
 import { Colors, COLORS } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { IconSymbol } from '../components/ui/icon-symbol';
+import { RadioGroup } from '../components/ui/RadioGroup';
 
 // ─── Types ────────────────────────────────────────────────────────
 type Opt = { label: string; value: string };
@@ -54,18 +56,18 @@ function PickerField({ label, value, options, onChange, icon, placeholder, color
 }
 
 // ─── Reusable Text Input ──────────────────────────────────────────
-function Field({ label, value, onChange, placeholder, icon, secure, keyboard, multi, colors }: any) {
+function Field({ label, value, onChange, placeholder, icon, secure, keyboard, multi, colors, editable = true }: any) {
   return (
     <View style={s.group}>
       <Text style={[s.label, { color: colors.text }]}>{label}</Text>
-      <View style={[s.row2, { borderColor: colors.border, height: multi ? 90 : 52, alignItems: multi ? 'flex-start' : 'center', paddingTop: multi ? 12 : 0 }]}>
+      <View style={[s.row2, { borderColor: colors.border, height: multi ? 90 : 52, alignItems: multi ? 'flex-start' : 'center', paddingTop: multi ? 12 : 0, backgroundColor: editable ? 'transparent' : '#f5f5f5' }]}>
         <IconSymbol name={icon} size={20} color={COLORS.gray} />
         <TextInput
           style={[s.inp, { color: colors.text, textAlignVertical: multi ? 'top' : 'center' }]}
           placeholder={placeholder} placeholderTextColor={COLORS.gray}
           value={value} onChangeText={onChange}
           secureTextEntry={secure} keyboardType={keyboard}
-          multiline={multi}
+          multiline={multi} editable={editable}
           autoCapitalize={keyboard === 'email-address' ? 'none' : 'sentences'}
         />
       </View>
@@ -100,11 +102,15 @@ export default function RegisterScreen() {
   const [bannerUri, setBannerUri] = useState('');
   const [payMethod, setPayMethod] = useState<'Cash' | 'Online' | ''>('');
 
+  // Date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dobDate, setDobDate] = useState(new Date(2000, 0, 1));
+
   const [form, setForm] = useState({
     firstname: '', middlename: '', lastname: '',
-    dob: '', gender: '', email: '', mobile_number: '', password: '',
-    address: '', state: '', city: '', pincode: '',
-    locations_id: '', job: '', education: '', marital_status: '',
+    dob: '', gender: 'Male', email: '', mobile_number: '', password: '',
+    address: '', state: 'Gujarat', city: '', pincode: '',
+    locations_id: '', job: '', education: '', marital_status: 'Single',
   });
 
   const upd = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -116,6 +122,16 @@ export default function RegisterScreen() {
       setVillages(list.map((v: any) => ({ label: v.name, value: v._id })));
     }).catch(() => { });
   }, []);
+
+  // Date change handler
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDobDate(selectedDate);
+      const formatted = selectedDate.toISOString().split('T')[0];
+      upd('dob', formatted);
+    }
+  };
 
   // Image picker helper
   const pickImage = async (type: 'photo' | 'banner') => {
@@ -144,7 +160,9 @@ export default function RegisterScreen() {
     if (!form.password || form.password.length < 6) return Alert.alert('Error', 'Password must be at least 6 characters');
     if (form.mobile_number && !/^[0-9]{10}$/.test(form.mobile_number)) return Alert.alert('Error', 'Mobile must be 10 digits');
     if (form.pincode && !/^[0-9]{6}$/.test(form.pincode)) return Alert.alert('Error', 'Pincode must be 6 digits');
+    if (!form.locations_id) return Alert.alert('Error', 'Please select your Village/Location');
     if (!payMethod) return Alert.alert('Error', 'Please select a payment method');
+
     if (payMethod === 'Online') {
       Alert.alert('Online Payment', 'Online payment will be available soon. Please use Cash for now.');
       return;
@@ -164,7 +182,7 @@ export default function RegisterScreen() {
 
       // Build payload — strip empty strings
       const payload: any = {};
-      Object.entries(form).forEach(([k, v]) => { if (v.trim()) payload[k] = v.trim(); });
+      Object.entries(form).forEach(([k, v]) => { if (v && v.trim()) payload[k] = v.trim(); });
       if (photoUrl) payload.photo = photoUrl;
       if (bannerUrl) payload.profile_banner = bannerUrl;
 
@@ -208,16 +226,44 @@ export default function RegisterScreen() {
 
           <View style={s.rowGap}>
             <View style={s.half}><Field label="First Name *" value={form.firstname} onChange={(v: string) => upd('firstname', v)} placeholder="First name" icon="person.fill" colors={colors} /></View>
-            <View style={s.half}><Field label="Middle Name" value={form.middlename} onChange={(v: string) => upd('middlename', v)} placeholder="Middle name" icon="person.fill" colors={colors} /></View>
+            <View style={s.half}><Field label="Middle Name" value={form.middlename} onChange={(v: string) => upd('middlename', v)} placeholder="Father/Husband" icon="person.fill" colors={colors} /></View>
           </View>
           <Field label="Last Name *" value={form.lastname} onChange={(v: string) => upd('lastname', v)} placeholder="Last name" icon="person.fill" colors={colors} />
-          <Field label="Date of Birth" value={form.dob} onChange={(v: string) => upd('dob', v)} placeholder="YYYY-MM-DD" icon="calendar" colors={colors} />
-          <PickerField label="Gender" value={form.gender} options={GENDERS} onChange={v => upd('gender', v)} icon="person.fill" colors={colors} />
+
+          {/* DOB with Custom Picker */}
+          <TouchableOpacity onPress={() => setShowDatePicker(true)} activeOpacity={0.8}>
+            <Field
+              label="Date of Birth"
+              value={form.dob}
+              placeholder="Select Date"
+              icon="calendar"
+              colors={colors}
+              editable={false}
+            />
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={dobDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onDateChange}
+              maximumDate={new Date()}
+            />
+          )}
+
+          <RadioGroup
+            label="Gender"
+            options={GENDERS}
+            value={form.gender}
+            onChange={v => upd('gender', v)}
+            colors={colors}
+          />
 
           {/* ── Contact ── */}
           <Section title="Contact Details" />
           <Field label="Email Address" value={form.email} onChange={(v: string) => upd('email', v)} placeholder="your@email.com" icon="envelope.fill" keyboard="email-address" colors={colors} />
-          <Field label="Mobile Number" value={form.mobile_number} onChange={(v: string) => upd('mobile_number', v)} placeholder="10-digit number" icon="phone.fill" keyboard="phone-pad" colors={colors} />
+          <Field label="Mobile Number *" value={form.mobile_number} onChange={(v: string) => upd('mobile_number', v)} placeholder="10-digit number" icon="phone.fill" keyboard="phone-pad" colors={colors} />
           <Field label="Password *" value={form.password} onChange={(v: string) => upd('password', v)} placeholder="Min. 6 characters" icon="lock.fill" secure colors={colors} />
 
           {/* ── Profile Photos ── */}
@@ -254,7 +300,7 @@ export default function RegisterScreen() {
           <Field label="Pincode" value={form.pincode} onChange={(v: string) => upd('pincode', v)} placeholder="6-digit pincode" icon="number" keyboard="number-pad" colors={colors} />
 
           <PickerField
-            label="Location (Village / Town)"
+            label="Location (Village / Town) *"
             value={form.locations_id}
             options={villages.length > 0 ? villages : [{ label: 'Loading villages...', value: '' }]}
             onChange={v => upd('locations_id', v)}
@@ -267,7 +313,15 @@ export default function RegisterScreen() {
           <Section title="Professional Details" />
           <Field label="Education" value={form.education} onChange={(v: string) => upd('education', v)} placeholder="e.g. B.Sc, MBA, 12th Pass" icon="book.fill" colors={colors} />
           <Field label="Job / Occupation" value={form.job} onChange={(v: string) => upd('job', v)} placeholder="e.g. Farmer, Engineer, Business" icon="briefcase.fill" colors={colors} />
-          <PickerField label="Marital Status" value={form.marital_status} options={MARITAL} onChange={v => upd('marital_status', v)} icon="heart.fill" colors={colors} />
+
+          <PickerField
+            label="Marital Status"
+            value={form.marital_status}
+            options={MARITAL}
+            onChange={v => upd('marital_status', v)}
+            icon="heart.fill"
+            colors={colors}
+          />
 
           {/* ── Payment ── */}
           <Section title="Registration Payment" />
@@ -397,3 +451,4 @@ const s = StyleSheet.create({
   footTxt: { fontSize: 14 },
   footLink: { fontSize: 14, fontWeight: 'bold' },
 });
+

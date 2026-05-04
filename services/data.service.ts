@@ -57,8 +57,8 @@ export const dataService = {
   },
 
   // Businesses
-  getBusinesses: async () => {
-    const response = await api.get('/business');
+  getBusinesses: async (params: any = {}) => {
+    const response = await api.get('/business', { params });
     return response.data;
   },
 
@@ -78,8 +78,8 @@ export const dataService = {
   },
 
   // Jobs
-  getJobs: async () => {
-    const response = await api.get('/jobs');
+  getJobs: async (params: any = {}) => {
+    const response = await api.get('/jobs', { params });
     return response.data;
   },
 
@@ -148,6 +148,12 @@ export const dataService = {
   // Page Content
   getPageContent: async (slug: string) => {
     const response = await api.get(`/pages/${slug}`);
+    return response.data;
+  },
+
+  // Achievements
+  getAchievements: async () => {
+    const response = await api.get('/achievements');
     return response.data;
   },
 };

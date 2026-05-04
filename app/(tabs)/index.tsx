@@ -20,6 +20,9 @@ export default function HomeScreen() {
   const [sliders, setSliders] = useState([]);
   const [news, setNews] = useState([]);
   const [events, setEvents] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [premiumBusinesses, setPremiumBusinesses] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,17 +37,23 @@ export default function HomeScreen() {
         const uData = await authService.getUserData();
         setUserData(uData);
       }
-      
-      const [slidersData, newsData, statsData, eventsData] = await Promise.all([
+
+      const [slidersData, newsData, statsData, eventsData, achievementData, businessData, jobData] = await Promise.all([
         dataService.getSliders(),
         dataService.getNews(),
         dataService.getStats(),
         dataService.getEvents(),
+        dataService.getAchievements(),
+        dataService.getBusinesses({ isPriority: true, limit: 6 }),
+        dataService.getJobs({ limit: 5 }),
       ]);
       setSliders(slidersData);
-      setNews(newsData);
+      setNews(newsData.slice(0, 2));
       setStats(statsData);
       setEvents(eventsData);
+      setAchievements(achievementData || []);
+      setPremiumBusinesses(businessData?.businesses || []);
+      setJobs(jobData || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -79,7 +88,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView 
+      <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
         }
@@ -92,7 +101,7 @@ export default function HomeScreen() {
               <Text style={styles.welcomeText}>{isLoggedIn ? `Namaste,` : 'Welcome to'}</Text>
               <Text style={styles.userName}>{isLoggedIn ? userData?.name?.split(' ')[0] : 'Panchal Samaj'}</Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.profileBtn}
               onPress={() => router.push(isLoggedIn ? '/(tabs)/profile' : '/login')}
             >
@@ -129,12 +138,48 @@ export default function HomeScreen() {
             <Slider data={sliders} />
           </View>
 
+          {/* Proud Moments Section */}
+          {achievements.length > 0 && (
+            <View style={styles.achievementSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Proud Moments</Text>
+                <IconSymbol name="star.fill" size={20} color="#FFD700" />
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.achievementScroll}>
+                {achievements.map((item: any) => (
+                  <View key={item._id} style={styles.achievementCard}>
+                    <View style={styles.trophyBadge}>
+                      <IconSymbol name="trophy.fill" size={20} color="#fff" />
+                    </View>
+                    <View style={styles.achievementImageContainer}>
+                      {item.image ? (
+                        <Image source={{ uri: Config.getImageUri(item.image) }} style={styles.achievementImage} />
+                      ) : (
+                        <View style={styles.achievementPlaceholder}>
+                          <IconSymbol name="person.fill" size={40} color="#ddd" />
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.achievementInfo}>
+                      <Text style={styles.achievementTitle} numberOfLines={1}>{item.title}</Text>
+                      <Text style={styles.achievementDesc} numberOfLines={2}>{item.description}</Text>
+                      <View style={styles.achievementMeta}>
+                        <Text style={styles.achievementCategory}>{item.category}</Text>
+                        <Text style={styles.achievementDate}>{new Date(item.date).getFullYear()}</Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           <View style={styles.quickActionsContainer}>
             <Text style={styles.sectionTitle}>Quick Access</Text>
             <View style={styles.actionGrid}>
               {quickActions.map(action => (
-                <TouchableOpacity 
-                  key={action.id} 
+                <TouchableOpacity
+                  key={action.id}
                   style={styles.actionItem}
                   onPress={() => router.push(action.route as any)}
                 >
@@ -146,6 +191,44 @@ export default function HomeScreen() {
               ))}
             </View>
           </View>
+
+          {/* Premium Businesses Section */}
+          {premiumBusinesses.length > 0 && (
+            <View style={styles.premiumSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Premium Partners</Text>
+                <TouchableOpacity onPress={() => router.push('/business' as any)}>
+                  <Text style={styles.seeAll}>See All</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.premiumScroll}>
+                {premiumBusinesses.map((biz: any) => (
+                  <TouchableOpacity
+                    key={biz._id}
+                    style={styles.premiumCard}
+                    onPress={() => router.push(`/business/${biz._id}`)}
+                  >
+                    <View style={styles.premiumImageContainer}>
+                      {biz.logo ? (
+                        <Image source={{ uri: Config.getImageUri(biz.logo) }} style={styles.premiumImage} />
+                      ) : (
+                        <View style={styles.premiumPlaceholder}>
+                          <IconSymbol name="building.2.fill" size={30} color={COLORS.accent} />
+                        </View>
+                      )}
+                      <View style={styles.premiumBadge}>
+                        <IconSymbol name="checkmark.seal.fill" size={14} color="#fff" />
+                      </View>
+                    </View>
+                    <View style={styles.premiumInfo}>
+                      <Text style={styles.premiumName} numberOfLines={1}>{biz.name}</Text>
+                      <Text style={styles.premiumCategory} numberOfLines={1}>{biz.category}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           <View style={styles.moreSection}>
             <View style={styles.sectionHeader}>
@@ -179,6 +262,42 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
 
+          {/* Jobs Section */}
+          {jobs.length > 0 && (
+            <View style={styles.jobSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Career Opportunities</Text>
+                <TouchableOpacity onPress={() => router.push('/jobs' as any)}>
+                  <Text style={styles.seeAll}>See All</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.jobScroll}>
+                {jobs.map((job: any) => (
+                  <TouchableOpacity
+                    key={job._id}
+                    style={styles.jobCard}
+                    onPress={() => router.push(`/jobs/${job._id}`)}
+                  >
+                    <View style={styles.jobBadge}>
+                      <Text style={styles.jobTypeText}>{job.jobType}</Text>
+                    </View>
+                    <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
+                    <Text style={styles.jobCompany} numberOfLines={1}>{job.company}</Text>
+                    <View style={styles.jobFooter}>
+                      <View style={styles.jobMeta}>
+                        <IconSymbol name="mappin" size={12} color={COLORS.gray} />
+                        <Text style={styles.jobLocation}>{job.location}</Text>
+                      </View>
+                      <TouchableOpacity style={styles.applyBtn} onPress={() => router.push(`/jobs/${job._id}`)}>
+                        <Text style={styles.applyBtnText}>Apply</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           <View style={styles.newsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Upcoming Events</Text>
@@ -188,8 +307,8 @@ export default function HomeScreen() {
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.eventsScroll}>
               {events.map((event: any) => (
-                <TouchableOpacity 
-                  key={event._id} 
+                <TouchableOpacity
+                  key={event._id}
                   style={styles.eventCard}
                   onPress={() => router.push(`/event/${event._id}`)}
                 >
@@ -220,9 +339,9 @@ export default function HomeScreen() {
             </View>
 
             {news.map((item: any) => (
-              <NewsCard 
-                key={item._id} 
-                item={item} 
+              <NewsCard
+                key={item._id}
+                item={item}
                 onPress={() => router.push(`/news/${item._id}`)}
               />
             ))}
@@ -257,7 +376,7 @@ const styles = StyleSheet.create({
   actionItem: { alignItems: 'center', width: (width - 40) / 4 },
   actionIconContainer: { width: 64, height: 64, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 8, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
   actionLabel: { fontSize: 13, fontWeight: '600', color: COLORS.black },
-  moreSection: { marginBottom: 25 },
+  moreSection: { marginBottom: 35 },
   moreScroll: { paddingRight: 20 },
   moreItem: { alignItems: 'center', marginRight: 20, backgroundColor: '#fff', padding: 15, borderRadius: 20, width: 100, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
   moreIcon: { width: 45, height: 45, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
@@ -273,4 +392,39 @@ const styles = StyleSheet.create({
   eventInfo: { padding: 12 },
   eventTitle: { fontSize: 15, fontWeight: 'bold', color: COLORS.black },
   eventDate: { fontSize: 12, color: COLORS.gray, marginTop: 4 },
+  achievementSection: { marginTop: 25 },
+  achievementScroll: { paddingRight: 20 },
+  achievementCard: { width: 200, backgroundColor: '#fff', borderRadius: 24, marginRight: 15, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 5, overflow: 'visible', marginBottom: 10 },
+  trophyBadge: { position: 'absolute', top: -10, right: -10, width: 36, height: 36, borderRadius: 18, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center', zIndex: 10, elevation: 5 },
+  achievementImageContainer: { height: 130, width: '100%', backgroundColor: '#f5f5f5', borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
+  achievementImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  achievementPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+  achievementInfo: { padding: 15 },
+  achievementTitle: { fontSize: 15, fontWeight: 'bold', color: COLORS.black },
+  achievementDesc: { fontSize: 12, color: COLORS.darkGray, marginTop: 4, lineHeight: 16 },
+  achievementMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
+  achievementCategory: { fontSize: 10, fontWeight: 'bold', color: COLORS.primary, backgroundColor: COLORS.primary + '15', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+  achievementDate: { fontSize: 10, color: COLORS.gray },
+  premiumSection: { marginBottom: 30 },
+  premiumScroll: { paddingRight: 20 },
+  premiumCard: { width: 140, backgroundColor: '#fff', borderRadius: 20, marginRight: 15, padding: 12, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, alignItems: 'center' },
+  premiumImageContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#f9f9f9', justifyContent: 'center', alignItems: 'center', marginBottom: 10, overflow: 'visible' },
+  premiumImage: { width: '100%', height: '100%', borderRadius: 40 },
+  premiumPlaceholder: { width: '100%', height: '100%', borderRadius: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.accent + '10' },
+  premiumBadge: { position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: COLORS.accent, justifyContent: 'center', alignItems: 'center', borderWeight: 2, borderColor: '#fff' },
+  premiumInfo: { alignItems: 'center', width: '100%' },
+  premiumName: { fontSize: 14, fontWeight: 'bold', color: COLORS.black, textAlign: 'center' },
+  premiumCategory: { fontSize: 11, color: COLORS.gray, marginTop: 2 },
+  jobSection: { marginBottom: 30 },
+  jobScroll: { paddingRight: 20 },
+  jobCard: { width: 260, backgroundColor: '#fff', borderRadius: 20, marginRight: 15, padding: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, borderLeftWidth: 4, borderLeftColor: COLORS.primary },
+  jobBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: COLORS.primary + '10', marginBottom: 10 },
+  jobTypeText: { fontSize: 10, fontWeight: 'bold', color: COLORS.primary, textTransform: 'uppercase' },
+  jobTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.black },
+  jobCompany: { fontSize: 13, color: COLORS.darkGray, marginTop: 4 },
+  jobFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15 },
+  jobMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  jobLocation: { fontSize: 12, color: COLORS.gray },
+  applyBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 10 },
+  applyBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
 });
